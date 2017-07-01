@@ -3,6 +3,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import *
 
+import platform
+
 class SelectorWindow(QDialog):
 
     selectionMade = pyqtSignal(QPixmap)
@@ -13,7 +15,8 @@ class SelectorWindow(QDialog):
 
         self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_NoSystemBackground, True)
-        self.setWindowOpacity(.50)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
+        #self.setWindowOpacity(.25)
         self.rejected.connect(self.selectionCanceled.emit)
 
 class RectangularSelectionWindow(SelectorWindow):

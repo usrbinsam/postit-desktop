@@ -6,8 +6,8 @@ from PyQt5.QtGui import *
 
 from ui.Ui_Main import Ui_MainWindow
 from selector import RectangularSelectionWindow
-
-RUNNING_IN_HELL = platform.system() == 'Windows'
+from utils import *
+import wrappers
 
 if RUNNING_IN_HELL:
     import win32gui
@@ -20,18 +20,6 @@ if RUNNING_IN_HELL:
         return win32gui.GetWindowText(WId).encode("UTF-8")
     def getCurrentWindow():
         return win32gui.GetCapture()
-
-class MouseMoveFilter(QObject):
-
-    mouseMoved = pyqtSignal(QPoint)
-
-    def eventFilter(self, obj, event):
-        
-        if event.type == QEvent.MouseMove:
-            print(event.pos())
-            self.mouseMoved.emit(event.pos())
-            return True
-        return False
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
@@ -59,9 +47,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setMouseTracking(True)
         self.windowSelectionMode = False
 
-        mouseFilter = MouseMoveFilter(self)
-        mouseFilter.mouseMoved.connect(self.mouseIsMoving)
-        self.installEventFilter(mouseFilter)
+        self.trayIcon = QSystemTrayIcon(self)
 
     def shootWindowId(self, WId):
         screen = self.windowHandle().screen()
@@ -70,9 +56,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.promptSavePixmap(pixmap)
     
     def enableWindowSelectionMode(self):
-        print("enabled window selection mode")
-        self.windowSelectionMode = True
-        self.setMouseTracking(True)
+
+        if RUNNING_IN_STEVE_JOBS:
+            fn = wrappers.captureWindow()
+
+        elif RUNNING_IN_HELL:
+            self.windowSelectionMode = True
+            self.setMouseTracking(True)
     
     def disableWindowSelectionMode(self):
         self.windowSelectionMode = False
@@ -112,7 +102,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         print("stored WId {} ({}) @ {}".format(WId, getWindowText(WId), self.currentGeometry))
 
     def rectangularSelection(self):
-        self.showSelectors(RectangularSelectionWindow)
+
+        if RUNNING_IN_STEVE_JOBS:
+            wrappers.captureSelection()
+        elif RUNNING_IN_HELL:
+            self.showSelectors(RectangularSelectionWindow)
 
     def shootFullScreen(self):
 
@@ -181,6 +175,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if path[0]:
             pixmap.save(path[0], "PNG")
 
+    def closeEvent(self, event):
+
+        if RUNNING_IN_STEVE_JOBS:
+            if not event.spontaneous() and not self.isVisible():
+                return
+
+        QMessageBox.information(self, "Systray",
+            "I'm running in the system tray. "
+            "Use <b>Quit</b> from the tray menu to end me."
+        )
+        self.hide()
+        event.ignore()
+            
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

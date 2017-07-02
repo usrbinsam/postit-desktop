@@ -1,0 +1,20 @@
+Core
+----
+[ ] Hide from Dock/Task Bar went hiding in the System Tray
+[ ] Global keyboard shortcuts for screenshots
+[ ] Prompt for login if no authentication token is found
+[ ] Build an installer
+[ ] Add to startup
+
+macOS
+----
+[ ] Package as .app
+[ ] Change Dock icon
+
+Windows
+----
+[ ] Window selection screenshots
+
+Linux
+----
+[ ] Test on Linux

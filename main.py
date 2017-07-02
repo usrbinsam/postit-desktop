@@ -5,9 +5,12 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
 from ui.Ui_Main import Ui_MainWindow
+
 from selector import RectangularSelectionWindow
 from utils import *
 import wrappers
+
+from restclient import LoginDialog, UploadThread
 
 if RUNNING_IN_HELL:
     import win32gui
@@ -34,6 +37,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.takeSelectionScreenShotButton.clicked.connect(self.rectangularSelection)
         self.selectorWindows = [ ]
 
+        self.logInButton.clicked.connect(self.loginUser)
+
         """
         1. get ID/dimensions of the window under the cursor
         2. draw box around the window
@@ -47,7 +52,45 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.setMouseTracking(True)
         self.windowSelectionMode = False
 
+        icon = QIcon("static/angry.svg")
+        self.setWindowIcon(icon)
+
         self.trayIcon = QSystemTrayIcon(self)
+        self.trayIcon.setIcon(icon)
+        self.trayIcon.show()
+        self.trayIcon.setContextMenu(self.createMenu())
+
+        self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope,
+            "GliTch_ Is Mad Studios", "PostIt")
+
+        self.readSettings()
+
+        self.uploadThreads = [ ]
+
+    def createMenu(self):
+        menu = QMenu(self)
+        menu.addAction("Desktop Screenshot", self.shootFullScreen)
+        menu.addAction("Window Screenshot", self.enableWindowSelectionMode)
+        menu.addAction("Select Area", self.rectangularSelection)
+        menu.addSeparator()
+        menu.addAction("Show", self.show)
+        menu.addAction("Quit", self.close)
+        return menu
+    
+    def readSettings(self):
+
+        if self.settings.contains("internet/authToken"):
+            self.authToken = self.settings.value("internet/authToken")
+        
+        if not self.settings.contains("internet/address"):
+            self.settings.setValue("internet/address", "http://127.0.0.1:5000")
+        
+    def loginUser(self):
+
+        diag = LoginDialog(self)
+        if diag.exec_():
+            self.settings.setValue("internet/authToken", diag.loginToken)
+
 
     def shootWindowId(self, WId):
         screen = self.windowHandle().screen()
@@ -175,6 +218,32 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if path[0]:
             pixmap.save(path[0], "PNG")
 
+    def startUpload(self, path):
+        thread = UploadThread(self,
+            self.settings.value("internet/address") + "/api/upload",
+            self.settings.value("internet/authTOken"),
+            path)
+
+        thread.resultReady.connect(self.uploadComplete)
+        thread.start()
+        self.uploadThreads.append(thread)
+    
+    def uploadComplete(self, uri, error):
+
+        if uri and not error:
+
+            clipboard = QGuiApplication.clipboard()
+            clipboard.setText(self.settings.value("internet/address") + uri)
+            self.trayIcon.showMessage("Upload Complete", "Image upload complete. The URL is in your clipboard.")
+
+        else:
+            QMessageBox.critical(self, "Upload Error", str(error))
+
+    def purgeAllThreads(self):
+        for thread in self.uploadThreads:
+            if thread.isRunning():
+                thread.terminate()
+
     def closeEvent(self, event):
 
         if RUNNING_IN_STEVE_JOBS:
@@ -183,14 +252,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         QMessageBox.information(self, "Systray",
             "I'm running in the system tray. "
-            "Use <b>Quit</b> from the tray menu to end me."
+            "Use Quit from the tray menu to end me."
         )
         self.hide()
         event.ignore()
-            
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     mw = MainWindow()
-    mw.show()
+    #mw.show()
     sys.exit(app.exec_())

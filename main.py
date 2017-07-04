@@ -91,7 +91,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if diag.exec_():
             self.settings.setValue("internet/authToken", diag.loginToken)
 
-
     def shootWindowId(self, WId):
         screen = self.windowHandle().screen()
         pixmap = screen.grabWindow(WId)
@@ -102,6 +101,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if RUNNING_IN_STEVE_JOBS:
             fn = wrappers.captureWindow()
+            print("saved to {}".format(fn))
+            self.startUpload(fn)
 
         elif RUNNING_IN_HELL:
             self.windowSelectionMode = True
@@ -147,7 +148,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def rectangularSelection(self):
 
         if RUNNING_IN_STEVE_JOBS:
-            wrappers.captureSelection()
+            fn = wrappers.captureSelection()
+            print("saved to {}".format(fn))
+            self.startUpload(fn)
         elif RUNNING_IN_HELL:
             self.showSelectors(RectangularSelectionWindow)
 
@@ -219,10 +222,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             pixmap.save(path[0], "PNG")
 
     def startUpload(self, path):
-        thread = UploadThread(self,
+        thread = UploadThread(
             self.settings.value("internet/address") + "/api/upload",
-            self.settings.value("internet/authTOken"),
-            path)
+            self.settings.value("internet/authToken"),
+            path, self)
 
         thread.resultReady.connect(self.uploadComplete)
         thread.start()
@@ -238,6 +241,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         else:
             QMessageBox.critical(self, "Upload Error", str(error))
+            raise error
 
     def purgeAllThreads(self):
         for thread in self.uploadThreads:

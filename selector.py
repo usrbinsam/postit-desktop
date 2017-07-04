@@ -15,7 +15,7 @@ class SelectorWindow(QDialog):
         self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_NoSystemBackground, True)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
-        #self.setWindowOpacity(.25)
+        self.setWindowOpacity(.25)
         self.rejected.connect(self.selectionCanceled.emit)
 
 class RectangularSelectionWindow(SelectorWindow):

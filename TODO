@@ -5,6 +5,8 @@ Core
 [ ] Prompt for login if no authentication token is found
 [ ] Build an installer
 [ ] Add to startup
+[ ] Debug mode / Testing mode
+[ ] Logging
 
 macOS
 ----

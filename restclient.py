@@ -31,17 +31,8 @@ def getLoginToken(address, email, password, timeout=15):
 
 def uploadFile(address, token, path):
     """ KeyError means the upload failed """
-
-    headers = {
-        "content-type": "application/json",
-        "Authentication-Token": token
-    }
-
-    files = {
-        "image": open(path, 'rb')
-    }
-
-    return requests.post(address, headers=headers, files=files).json()['url']
+    r = requests.post(address, headers={ "Authentication-Token": token }, files={ "image": open(path, "rb") })
+    return r.json()['url']
 
 class UploadThread(QThread):
 
@@ -58,7 +49,7 @@ class UploadThread(QThread):
         url, error = None, None
 
         try:
-            uploadFile(self.addr, self.token, self.path)
+            url = uploadFile(self.addr, self.token, self.path)
         except Exception as e:
             error = e
         

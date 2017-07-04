@@ -7,7 +7,7 @@ def screencapture(windowSelection=False, outputFile='', imgFormat="png", delay=0
     refer to `man 1 screencapture' for a reference to the options below on macOS """
 
     args = [ "screencapture"
-        ,"-i"                           ## interactive mode
+        , "-i"                           ## interactive mode
         , "-t{}".format(imgFormat)      ## image format (default is PNG for screencapture)
     ]
 
@@ -27,18 +27,16 @@ def screencapture(windowSelection=False, outputFile='', imgFormat="png", delay=0
         args.append("-r")
 
     if not outputFile:
-        fh, name = tempfile.mkstemp()
+        fh, name = tempfile.mkstemp(suffix="." + imgFormat)
         outputFile = name
         
     args.append(outputFile)
-
     subprocess.call(args)
 
     return outputFile
 
-
 def captureWindow():
-    fn = screencapture(windowSelection=True)
+    return screencapture(windowSelection=True)
 
 def captureSelection():
-    fh = screencapture()
+    return screencapture()

@@ -260,12 +260,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if not event.spontaneous() and not self.isVisible():
                 return
 
-        QMessageBox.information(self, "Systray",
-            "I'm running in the system tray. "
-            "Use Quit from the tray menu to end me."
-        )
-        self.hide()
-        event.ignore()
+        if self.isVisible():
+            QMessageBox.information(self, "Systray",
+                "I'm running in the system tray. "
+                "Use Quit from the tray menu to end me."
+            )
+            self.hide()
+            event.ignore()
 
     def readEnvironment(self):
 

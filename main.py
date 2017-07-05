@@ -1,7 +1,7 @@
 import os, sys, platform
 
 from PyQt5.QtCore import *
-from PyQt5.QtWidgets import * 
+from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
 from ui.Ui_Main import Ui_MainWindow
@@ -79,15 +79,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         menu.addAction("Show", self.show)
         menu.addAction("Quit", self.close)
         return menu
-    
+
     def readSettings(self):
 
         if self.settings.contains("internet/authToken"):
             self.authToken = self.settings.value("internet/authToken")
-        
+
         if not self.settings.contains("internet/address"):
             self.settings.setValue("internet/address", "https://nsfw.run")
-        
+
     def loginUser(self):
 
         diag = LoginDialog(self)
@@ -99,7 +99,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         pixmap = screen.grabWindow(WId)
 
         self.promptSavePixmap(pixmap)
-    
+
     def enableWindowSelectionMode(self):
 
         if RUNNING_IN_STEVE_JOBS:
@@ -110,7 +110,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         elif RUNNING_IN_HELL:
             self.windowSelectionMode = True
             self.setMouseTracking(True)
-    
+
     def disableWindowSelectionMode(self):
         self.windowSelectionMode = False
         self.setMouseTracking(True)
@@ -128,7 +128,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
             self.rememberWindowAtPos(pos)
             ## TODO: draw box here
-        
+
         elif self.currentWId > 0 and not self.currentGeometry.contains(pos):
             print("moved outside of previous window dimensions")
             self.rememberWindowAtPos(pos)
@@ -210,7 +210,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             selector.windowHandle().setScreen(qApp.screens()[i])
 
     def hideSelectors(self):
-        
+
         for selector in self.selectorWindows:
             selector.hide()
 
@@ -221,7 +221,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def promptSavePixmap(self, pixmap):
 
-        path = QFileDialog.getSaveFileName(self, "Save Screenshot", 
+        path = QFileDialog.getSaveFileName(self, "Save Screenshot",
             "Screenshot {}.png".format(QDateTime.currentDateTime().toString("dd-MM-yy h.mm.ss.z")))
 
         if path[0]:
@@ -236,7 +236,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         thread.resultReady.connect(self.uploadComplete)
         thread.start()
         self.uploadThreads.append(thread)
-    
+
     def uploadComplete(self, uri, error):
 
         if uri and not error:

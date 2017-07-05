@@ -104,8 +104,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if RUNNING_IN_STEVE_JOBS:
             fn = wrappers.captureWindow()
-            print("saved to {}".format(fn))
-            self.startUpload(fn)
+            if fn:
+                self.startUpload(fn)
 
         elif RUNNING_IN_HELL:
             self.windowSelectionMode = True
@@ -152,8 +152,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if RUNNING_IN_STEVE_JOBS:
             fn = wrappers.captureSelection()
-            print("saved to {}".format(fn))
-            self.startUpload(fn)
+            if fn:
+                self.startUpload(fn)
+
         elif RUNNING_IN_HELL:
             self.showSelectors(RectangularSelectionWindow)
 

@@ -31,7 +31,9 @@ def screencapture(windowSelection=False, outputFile='', imgFormat="png", delay=0
         outputFile = name
         
     args.append(outputFile)
-    subprocess.call(args)
+
+    if subprocess.call(args) == 1:
+        return
 
     return outputFile
 

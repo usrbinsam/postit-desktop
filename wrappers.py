@@ -8,7 +8,7 @@ def screencapture(windowSelection=False, outputFile='', imgFormat="png", delay=0
 
     args = [ "screencapture"
         , "-i"                           ## interactive mode
-        , "-t{}".format(imgFormat)      ## image format (default is PNG for screencapture)
+        , "-t{}".format(imgFormat)       ## image format (default is PNG for screencapture)
     ]
 
     if windowSelection:

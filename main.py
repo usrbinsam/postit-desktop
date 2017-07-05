@@ -86,7 +86,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.authToken = self.settings.value("internet/authToken")
         
         if not self.settings.contains("internet/address"):
-            self.settings.setValue("internet/address", "http://127.0.0.1:5000")
+            self.settings.setValue("internet/address", "https://nsfw.run")
         
     def loginUser(self):
 

@@ -1,5 +1,6 @@
 import json
 import requests
+import os
 from bs4 import BeautifulSoup
 
 from PyQt5.QtCore import *
@@ -22,16 +23,18 @@ def getLoginToken(address, email, password, timeout=15):
         "csrf_token": csrf
     })
 
-    r = client.post(address, data=login_data, headers={ "content-type": "application/json" }, timeout=timeout).json()
+    r = client.post(address, data=login_data, headers={ "content-type": "application/json" }, timeout=timeout)
 
     ## if there's a login failure here, the server will report back whether the username or password was wrong.
     ## https://github.com/mattupstate/flask-security/issues/673
 
-    return r['response']['user']['authentication_token']
+    return r.json()['response']['user']['authentication_token']
 
-def uploadFile(address, token, path):
+def uploadFile(address, token, path, delete=True):
     """ KeyError means the upload failed """
     r = requests.post(address, headers={ "Authentication-Token": token }, files={ "image": open(path, "rb") })
+    if delete:
+        os.unlink(path)
     return r.json()['url']
 
 class UploadThread(QThread):
@@ -52,7 +55,7 @@ class UploadThread(QThread):
             url = uploadFile(self.addr, self.token, self.path)
         except Exception as e:
             error = e
-        
+
         self.resultReady.emit(url, error)
 
 class LoginThread(QThread):

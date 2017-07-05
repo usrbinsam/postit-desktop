@@ -1,4 +1,4 @@
-import sys, platform
+import os, sys, platform
 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import * 
@@ -53,6 +53,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.windowSelectionMode = False
 
         icon = QIcon("static/angry.svg")
+        icon.setIsMask(True)
         self.setWindowIcon(icon)
 
         self.trayIcon = QSystemTrayIcon(self)
@@ -66,6 +67,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.readSettings()
 
         self.uploadThreads = [ ]
+
+        self.readEnvironment()
 
     def createMenu(self):
         menu = QMenu(self)
@@ -184,7 +187,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         painter.end()
 
-        self.promptSavePixmap(pixmap)
+        io = Pixmap2StringIO(pixmap)
+
+        self.startUpload(self, io)
 
     def showSelectors(self, selectorClass):
 
@@ -260,6 +265,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         )
         self.hide()
         event.ignore()
+
+    def readEnvironment(self):
+
+        if os.environ.get("POSTIT_SHOW_ON_STARTUP", False) :
+            self.show()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

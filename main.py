@@ -92,15 +92,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if fn:
                 self.uploadFile(fn)
 
-        elif RUNNING_IN_HELL:
-            self.windowSelectionMode = True
-            self.setMouseTracking(True)
-
-    def disableWindowSelectionMode(self):
-        self.windowSelectionMode = False
-        self.setMouseTracking(True)
-        ## TODO: cleanup remaining highlight boxes
-
     def mouseIsMoving(self, pos):
 
         if not self.windowSelectionMode:
@@ -140,7 +131,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             if fn:
                 self.uploadFile(fn)
 
-        elif RUNNING_IN_HELL:
+        else:
             self.showSelectors(RectangularSelectionWindow)
 
     def shootFullScreen(self):

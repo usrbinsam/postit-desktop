@@ -42,9 +42,9 @@ class RectangularSelectionWindow(SelectorWindow):
 
         if event.button() == Qt.LeftButton:
             self.rubberBand.hide()
-            x, y, w, h = self.rubberBand.geometry().getRect()
-            screen = self.windowHandle().screen()
-            self.selectionMade.emit(screen, x, y, w, h)
+            self.selectionMade.emit(
+                self.windowHandle().screen(),
+                *self.rubberBand.geometry().getRect())
 
 """
 class RectWidget(QWidget):

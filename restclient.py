@@ -30,12 +30,15 @@ def getLoginToken(address, email, password, timeout=15):
 
     return r.json()['response']['user']['authentication_token']
 
+def uploadHandle(address, token, handle):
+    r = requests.post(address, headers={ "Authentication-Token": token }, files={ "image": handle })
+    return r.json()['url']
+
 def uploadFile(address, token, path, delete=True):
-    """ KeyError means the upload failed """
-    r = requests.post(address, headers={ "Authentication-Token": token }, files={ "image": open(path, "rb") })
+    r = uploadHandle(address, token, open(path, "rb"))
     if delete:
         os.unlink(path)
-    return r.json()['url']
+    return r
 
 class UploadThread(QThread):
 
@@ -57,6 +60,17 @@ class UploadThread(QThread):
             error = e
 
         self.resultReady.emit(url, error)
+
+class UploadHandleThread(UploadThread):
+    def run(self):
+        url, error = None, None
+
+        try:
+            url = uploadHandle(self.addr, self.token, self.path)
+        except Exception as e:
+            error = e
+
+        self.resultReady.emit(url, error)        
 
 class LoginThread(QThread):
 

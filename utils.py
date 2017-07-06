@@ -17,7 +17,8 @@ def Pixmap2StringIO(pixmap):
     buffer.open(QIODevice.WriteOnly)
     pixmap.save(buffer, "PNG")
 
-    strio = io.StringIO(byteArray)
-    strio.seek(0)
+    data = io.BytesIO(byteArray.data())
+    data.seek(0)
+    data.name = "Screenshot.PNG"
 
-    return strio
+    return data

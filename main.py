@@ -1,4 +1,4 @@
-import os, sys, platform
+import os, sys, platform, webbrowser
 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -10,7 +10,7 @@ from selector import RectangularSelectionWindow
 from utils import *
 import wrappers
 
-from restclient import LoginDialog, UploadThread
+from restclient import LoginDialog, UploadThread, UploadHandleThread
 
 if RUNNING_IN_HELL:
     import win32gui
@@ -47,6 +47,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # screenshot a window
         self.takeWindowScreenShotButton.clicked.connect(self.enableWindowSelectionMode)
         self.highlightWindows = [ ]
+        self.uploadThreads = [ ]
+        self.lastUpload = ''
+
         self.currentGeometry = QRect()
         self.currentWId = -1
         self.setMouseTracking(True)
@@ -60,15 +63,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.trayIcon.setIcon(icon)
         self.trayIcon.show()
         self.trayIcon.setContextMenu(self.createMenu())
+        self.trayIcon.messageClicked.connect(self.openLastUpload) ## this is never triggered on macOS. sorry
 
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope,
             "GliTch_ Is Mad Studios", "PostIt")
 
-        self.readSettings()
-
-        self.uploadThreads = [ ]
-
+        self.readSettings()        
         self.readEnvironment()
+
+    def openLastUpload(self):
+        webbrowser.open_new_tab(self.lastUpload)
 
     def createMenu(self):
         menu = QMenu(self)
@@ -98,14 +102,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         screen = self.windowHandle().screen()
         pixmap = screen.grabWindow(WId)
 
-        self.promptSavePixmap(pixmap)
+        self.uploadHandle(Pixmap2StringIO(pixmap))
 
     def enableWindowSelectionMode(self):
 
         if RUNNING_IN_STEVE_JOBS:
             fn = wrappers.captureWindow()
             if fn:
-                self.startUpload(fn)
+                self.uploadFile(fn)
 
         elif RUNNING_IN_HELL:
             self.windowSelectionMode = True
@@ -153,7 +157,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if RUNNING_IN_STEVE_JOBS:
             fn = wrappers.captureSelection()
             if fn:
-                self.startUpload(fn)
+                self.uploadFile(fn)
 
         elif RUNNING_IN_HELL:
             self.showSelectors(RectangularSelectionWindow)
@@ -188,9 +192,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         painter.end()
 
-        io = Pixmap2StringIO(pixmap)
-
-        self.startUpload(self, io)
+        self.uploadHandle(Pixmap2StringIO(pixmap))
 
     def showSelectors(self, selectorClass):
 
@@ -214,20 +216,17 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for selector in self.selectorWindows:
             selector.hide()
 
-    def selectionMade(self, pixmap):
+    def selectionMade(self, screen, x, y, w, h):
 
         self.hideSelectors()
-        self.promptSavePixmap(pixmap)
 
-    def promptSavePixmap(self, pixmap):
+        pixmap = screen.grabWindow(0, x, y, w, h)
 
-        path = QFileDialog.getSaveFileName(self, "Save Screenshot",
-            "Screenshot {}.png".format(QDateTime.currentDateTime().toString("dd-MM-yy h.mm.ss.z")))
+        strIO = Pixmap2StringIO(pixmap)
+        self.uploadHandle(strIO)
 
-        if path[0]:
-            pixmap.save(path[0], "PNG")
-
-    def startUpload(self, path):
+    def uploadFile(self, path):
+        """ used for uploading a file on the file-system """
         thread = UploadThread(
             self.settings.value("internet/address") + "/api/upload",
             self.settings.value("internet/authToken"),
@@ -237,12 +236,26 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         thread.start()
         self.uploadThreads.append(thread)
 
+    def uploadHandle(self, handle):
+        """ used for uploading a file-like object that has a .read() method """
+        thread = UploadHandleThread(
+            self.settings.value("internet/address") + "/api/upload",
+            self.settings.value("internet/authToken"),
+            handle, self)
+
+        thread.resultReady.connect(self.uploadComplete)
+        thread.start()
+        self.uploadThreads.append(thread)
+
     def uploadComplete(self, uri, error):
 
         if uri and not error:
 
+            URL = self.settings.value("internet/address") + uri
+
             clipboard = QGuiApplication.clipboard()
-            clipboard.setText(self.settings.value("internet/address") + uri)
+            clipboard.setText(URL)
+            self.lastUpload = URL
             self.trayIcon.showMessage("Upload Complete", "Image upload complete. The URL is in your clipboard.")
 
         else:
@@ -268,14 +281,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.hide()
             event.ignore()
 
+        self.trayIcon.hide()
+
     def readEnvironment(self):
 
         if os.environ.get("POSTIT_SHOW_ON_STARTUP", False) :
             self.show()
 
-
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     mw = MainWindow()
-    #mw.show()
     sys.exit(app.exec_())

@@ -2,26 +2,25 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import * 
 from PyQt5.QtGui import *
 
-import platform
-
 class SelectorWindow(QDialog):
 
-    selectionMade = pyqtSignal(QPixmap)
+    selectionMade = pyqtSignal(QScreen, int, int, int, int)
     selectionCanceled = pyqtSignal()
 
     def __init__(self, parent=None):
         super(SelectorWindow, self).__init__(parent)
 
         self.setWindowFlags(Qt.Widget | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.setAttribute(Qt.WA_NoSystemBackground, True)
-        self.setAttribute(Qt.WA_TranslucentBackground, True)
-        self.setWindowOpacity(.25)
-        self.rejected.connect(self.selectionCanceled.emit)
 
 class RectangularSelectionWindow(SelectorWindow):
 
     def __init__(self, parent=None):
         super(SelectorWindow, self).__init__(parent)
+
+        self.setAttribute(Qt.WA_NoSystemBackground, True)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowOpacity(.50)
+        self.rejected.connect(self.selectionCanceled.emit)
 
         self.rubberBand = QRubberBand(QRubberBand.Rectangle, self)
         self._origin = QPoint()
@@ -43,10 +42,10 @@ class RectangularSelectionWindow(SelectorWindow):
 
         if event.button() == Qt.LeftButton:
             self.rubberBand.hide()
-            rect = self.rubberBand.geometry()
+            x, y, w, h = self.rubberBand.geometry().getRect()
             screen = self.windowHandle().screen()
-            pixmap = screen.grabWindow(0, rect.x() + self.geometry().x(), rect.y(), rect.width(), rect.height()) ## FIXME: this works but it's weird.
-            self.selectionMade.emit(pixmap)
+            self.selectionMade.emit(screen, x, y, w, h)
+
 """
 class RectWidget(QWidget):
 

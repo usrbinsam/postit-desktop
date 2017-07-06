@@ -4,25 +4,17 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
-from ui.Ui_Main import Ui_MainWindow
-
-from selector import RectangularSelectionWindow
 from utils import *
-import wrappers
+
+from ui.Ui_Main import Ui_MainWindow
+from selector import RectangularSelectionWindow
+
+if RUNNING_IN_STEVE_JOBS:
+    import wrappers_mac as wrappers
+elif RUNNING_IN_HELL:
+    import wrappers_win32 as wrappers
 
 from restclient import LoginDialog, UploadThread, UploadHandleThread
-
-if RUNNING_IN_HELL:
-    import win32gui
-
-    def getWindowUnderCursor(p):
-        return win32gui.WindowFromPoint((p.x(), p.y()))
-    def getWindowDimensions(WId):
-        return win32gui.GetWindowRect(WId)
-    def getWindowText(WId):
-        return win32gui.GetWindowText(WId).encode("UTF-8")
-    def getCurrentWindow():
-        return win32gui.GetCapture()
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
@@ -30,34 +22,20 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         super(MainWindow, self).__init__()
         self.setupUi(self)
 
-        # screenshot the whole desktop
-        self.takeScreenShotButton.clicked.connect(self.shootFullScreen)
+        self.shootDesktopBn.clicked.connect(self.shootFullScreen)
+        self.shootAreaBn.clicked.connect(self.rectangularSelection)
+        self.shootWindowBn.clicked.connect(self.enableWindowSelectionMode)
+        self.loginBn.clicked.connect(self.loginUser)
 
-        # screenshot a selection
-        self.takeSelectionScreenShotButton.clicked.connect(self.rectangularSelection)
-        self.selectorWindows = [ ]
+        self.selectorWindows    = [ ]
+        self.highlightWindows   = [ ]
+        self.uploadThreads      = [ ]
+        self.lastUpload         = ''
+        self.currentGeometry    = QRect()
+        self.currentWId         = -1
 
-        self.logInButton.clicked.connect(self.loginUser)
-
-        """
-        1. get ID/dimensions of the window under the cursor
-        2. draw box around the window
-        3. repeat when cursor point is no longer inside dimensions
-        """
-        # screenshot a window
-        self.takeWindowScreenShotButton.clicked.connect(self.enableWindowSelectionMode)
-        self.highlightWindows = [ ]
-        self.uploadThreads = [ ]
-        self.lastUpload = ''
-
-        self.currentGeometry = QRect()
-        self.currentWId = -1
-        self.setMouseTracking(True)
-        self.windowSelectionMode = False
-
-        icon = QIcon("static/angry.svg")
+        icon = QIcon(":static/angry.svg")
         icon.setIsMask(True)
-        self.setWindowIcon(icon)
 
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setIcon(icon)
@@ -69,25 +47,28 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             "GliTch_ Is Mad Studios", "PostIt")
 
         self.readSettings()        
-        self.readEnvironment()
 
     def openLastUpload(self):
         webbrowser.open_new_tab(self.lastUpload)
 
     def createMenu(self):
         menu = QMenu(self)
+
         menu.addAction("Desktop Screenshot", self.shootFullScreen)
         menu.addAction("Window Screenshot", self.enableWindowSelectionMode)
         menu.addAction("Select Area", self.rectangularSelection)
         menu.addSeparator()
         menu.addAction("Show", self.show)
         menu.addAction("Quit", self.close)
+
         return menu
 
     def readSettings(self):
 
         if self.settings.contains("internet/authToken"):
             self.authToken = self.settings.value("internet/authToken")
+        else:
+            self.loginUser()
 
         if not self.settings.contains("internet/address"):
             self.settings.setValue("internet/address", "https://nsfw.run")
@@ -102,7 +83,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         screen = self.windowHandle().screen()
         pixmap = screen.grabWindow(WId)
 
-        self.uploadHandle(Pixmap2StringIO(pixmap))
+        self.uploadHandle(pixmap2bytesIO(pixmap))
 
     def enableWindowSelectionMode(self):
 
@@ -192,7 +173,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         painter.end()
 
-        self.uploadHandle(Pixmap2StringIO(pixmap))
+        self.uploadHandle(pixmap2bytesIO(pixmap))
 
     def showSelectors(self, selectorClass):
 
@@ -222,7 +203,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         pixmap = screen.grabWindow(0, x, y, w, h)
 
-        strIO = Pixmap2StringIO(pixmap)
+        strIO = pixmap2bytesIO(pixmap)
         self.uploadHandle(strIO)
 
     def uploadFile(self, path):
@@ -278,15 +259,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 "I'm running in the system tray. "
                 "Use Quit from the tray menu to end me."
             )
-            self.hide()
             event.ignore()
-
-        self.trayIcon.hide()
-
-    def readEnvironment(self):
-
-        if os.environ.get("POSTIT_SHOW_ON_STARTUP", False) :
-            self.show()
+            self.hide()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

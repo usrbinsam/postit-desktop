@@ -47,7 +47,7 @@ class Ui_LoginDialog(object):
     def retranslateUi(self, LoginDialog):
         _translate = QtCore.QCoreApplication.translate
         LoginDialog.setWindowTitle(_translate("LoginDialog", "Login"))
-        self.label.setText(_translate("LoginDialog", "<html><head/><body><p align=\"center\">Enter the email address and password you used to register at PostIt.</p><p align=\"center\">If you do not have an account, you can register <a href=\"http://localhost:5000/register\"><span style=\" text-decoration: underline; color:#0000ff;\">here</span></a>.</p></body></html>"))
+        self.label.setText(_translate("LoginDialog", "<html><head/><body><p align=\"center\">Enter the email address and password you used to register at PostIt.</p><p align=\"center\">If you do not have an account, you can register <a href=\"https://www.nsfw.run/register\"><span style=\" text-decoration: underline; color:#0000ff;\">here</span></a>.</p></body></html>"))
         self.emailAddressLabel.setText(_translate("LoginDialog", "Email Address"))
         self.passwordLabel.setText(_translate("LoginDialog", "Password"))
 

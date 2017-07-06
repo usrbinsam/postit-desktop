@@ -7,37 +7,44 @@
     <x>0</x>
     <y>0</y>
     <width>235</width>
-    <height>213</height>
+    <height>191</height>
    </rect>
   </property>
+  <property name="mouseTracking">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
-   <string>PostIt</string>
+   <string>POST It</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="../resource.qrc">
+    <normaloff>:/static/angry.svg</normaloff>:/static/angry.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="QPushButton" name="logInButton">
+     <widget class="QPushButton" name="loginBn">
       <property name="text">
        <string>Log In</string>
       </property>
      </widget>
     </item>
     <item row="1" column="0">
-     <widget class="QPushButton" name="takeScreenShotButton">
+     <widget class="QPushButton" name="shootDesktopBn">
       <property name="text">
        <string>Full Screen</string>
       </property>
      </widget>
     </item>
     <item row="2" column="0">
-     <widget class="QPushButton" name="takeSelectionScreenShotButton">
+     <widget class="QPushButton" name="shootAreaBn">
       <property name="text">
        <string>Selection</string>
       </property>
      </widget>
     </item>
     <item row="3" column="0">
-     <widget class="QPushButton" name="takeWindowScreenShotButton">
+     <widget class="QPushButton" name="shootWindowBn">
       <property name="text">
        <string>Window</string>
       </property>
@@ -46,6 +53,8 @@
    </layout>
   </widget>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resource.qrc"/>
+ </resources>
  <connections/>
 </ui>

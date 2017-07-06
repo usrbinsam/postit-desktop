@@ -1,0 +1,91 @@
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'ui/Ui_Preferences.ui'
+#
+# Created by: PyQt5 UI code generator 5.9
+#
+# WARNING! All changes made in this file will be lost!
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+class Ui_PreferencesDialog(object):
+    def setupUi(self, PreferencesDialog):
+        PreferencesDialog.setObjectName("PreferencesDialog")
+        PreferencesDialog.resize(391, 336)
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(PreferencesDialog)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.groupBox_2 = QtWidgets.QGroupBox(PreferencesDialog)
+        self.groupBox_2.setObjectName("groupBox_2")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.groupBox_2)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.formLayout_2 = QtWidgets.QFormLayout()
+        self.formLayout_2.setObjectName("formLayout_2")
+        self.startOnLoginLabel = QtWidgets.QLabel(self.groupBox_2)
+        self.startOnLoginLabel.setObjectName("startOnLoginLabel")
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.startOnLoginLabel)
+        self.startOnLoginCheckBox = QtWidgets.QCheckBox(self.groupBox_2)
+        self.startOnLoginCheckBox.setObjectName("startOnLoginCheckBox")
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.startOnLoginCheckBox)
+        self.copyLinkToClipboardAfterUploadLabel = QtWidgets.QLabel(self.groupBox_2)
+        self.copyLinkToClipboardAfterUploadLabel.setObjectName("copyLinkToClipboardAfterUploadLabel")
+        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.copyLinkToClipboardAfterUploadLabel)
+        self.copyLinkToClipboardCheckBox = QtWidgets.QCheckBox(self.groupBox_2)
+        self.copyLinkToClipboardCheckBox.setObjectName("copyLinkToClipboardCheckBox")
+        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.copyLinkToClipboardCheckBox)
+        self.showUploadCompleteNotificationLabel = QtWidgets.QLabel(self.groupBox_2)
+        self.showUploadCompleteNotificationLabel.setObjectName("showUploadCompleteNotificationLabel")
+        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.showUploadCompleteNotificationLabel)
+        self.showUploadCompleteNotificationCheckBox = QtWidgets.QCheckBox(self.groupBox_2)
+        self.showUploadCompleteNotificationCheckBox.setObjectName("showUploadCompleteNotificationCheckBox")
+        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.showUploadCompleteNotificationCheckBox)
+        self.openLinkInBrowserLabel = QtWidgets.QLabel(self.groupBox_2)
+        self.openLinkInBrowserLabel.setObjectName("openLinkInBrowserLabel")
+        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.openLinkInBrowserLabel)
+        self.openLinkInBrowserCheckBox = QtWidgets.QCheckBox(self.groupBox_2)
+        self.openLinkInBrowserCheckBox.setObjectName("openLinkInBrowserCheckBox")
+        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.openLinkInBrowserCheckBox)
+        self.verticalLayout_2.addLayout(self.formLayout_2)
+        self.verticalLayout_3.addWidget(self.groupBox_2)
+        self.groupBox = QtWidgets.QGroupBox(PreferencesDialog)
+        self.groupBox.setObjectName("groupBox")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.groupBox)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.formLayout = QtWidgets.QFormLayout()
+        self.formLayout.setObjectName("formLayout")
+        self.selectionLabel = QtWidgets.QLabel(self.groupBox)
+        self.selectionLabel.setObjectName("selectionLabel")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.selectionLabel)
+        self.selectionWidget = QtWidgets.QWidget(self.groupBox)
+        self.selectionWidget.setObjectName("selectionWidget")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.selectionWidget)
+        self.desktopLabel = QtWidgets.QLabel(self.groupBox)
+        self.desktopLabel.setObjectName("desktopLabel")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.desktopLabel)
+        self.desktopWidget = QtWidgets.QWidget(self.groupBox)
+        self.desktopWidget.setObjectName("desktopWidget")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.desktopWidget)
+        self.verticalLayout.addLayout(self.formLayout)
+        self.verticalLayout_3.addWidget(self.groupBox)
+        self.buttonBox = QtWidgets.QDialogButtonBox(PreferencesDialog)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.verticalLayout_3.addWidget(self.buttonBox)
+
+        self.retranslateUi(PreferencesDialog)
+        self.buttonBox.accepted.connect(PreferencesDialog.accept)
+        self.buttonBox.rejected.connect(PreferencesDialog.reject)
+        QtCore.QMetaObject.connectSlotsByName(PreferencesDialog)
+
+    def retranslateUi(self, PreferencesDialog):
+        _translate = QtCore.QCoreApplication.translate
+        PreferencesDialog.setWindowTitle(_translate("PreferencesDialog", "Preferences"))
+        self.groupBox_2.setTitle(_translate("PreferencesDialog", "General"))
+        self.startOnLoginLabel.setText(_translate("PreferencesDialog", "Start on Login"))
+        self.copyLinkToClipboardAfterUploadLabel.setText(_translate("PreferencesDialog", "Copy link to clipboard after upload"))
+        self.showUploadCompleteNotificationLabel.setText(_translate("PreferencesDialog", "Show upload complete notification"))
+        self.openLinkInBrowserLabel.setText(_translate("PreferencesDialog", "Open link in browser"))
+        self.groupBox.setTitle(_translate("PreferencesDialog", "Keyboard Shortcuts"))
+        self.selectionLabel.setText(_translate("PreferencesDialog", "Selection"))
+        self.desktopLabel.setText(_translate("PreferencesDialog", "Desktop"))
+

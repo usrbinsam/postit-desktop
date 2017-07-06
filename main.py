@@ -8,6 +8,7 @@ from utils import *
 
 from ui.Ui_Main import Ui_MainWindow
 from selector import RectangularSelectionWindow
+from preferences import PreferencesDialog
 
 if RUNNING_IN_STEVE_JOBS:
     import wrappers_mac as wrappers
@@ -26,6 +27,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.shootAreaBn.clicked.connect(self.rectangularSelection)
         self.shootWindowBn.clicked.connect(self.enableWindowSelectionMode)
         self.loginBn.clicked.connect(self.loginUser)
+        self.preferencesBn.clicked.connect(self.openPreferences)
 
         self.selectorWindows    = [ ]
         self.highlightWindows   = [ ]
@@ -41,12 +43,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.trayIcon.setIcon(icon)
         self.trayIcon.show()
         self.trayIcon.setContextMenu(self.createMenu())
-        self.trayIcon.messageClicked.connect(self.openLastUpload) ## this is never triggered on macOS. sorry
+        self.trayIcon.messageClicked.connect(self.openLastUpload)
 
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope,
             "GliTch_ Is Mad Studios", "PostIt")
 
-        self.readSettings()        
+        self.readSettings()
 
     def openLastUpload(self):
         webbrowser.open_new_tab(self.lastUpload)
@@ -58,10 +60,15 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         menu.addAction("Window Screenshot", self.enableWindowSelectionMode)
         menu.addAction("Select Area", self.rectangularSelection)
         menu.addSeparator()
+        menu.addAction("Preferences...", self.openPreferences)
         menu.addAction("Show", self.show)
-        menu.addAction("Quit", self.close)
+        menu.addAction("Quit", qApp.exit)
 
         return menu
+
+    def openPreferences(self):
+        prefDiag = PreferencesDialog(self.settings, self)
+        prefDiag.exec_()
 
     def readSettings(self):
 
@@ -240,11 +247,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 thread.terminate()
 
     def closeEvent(self, event):
-
-        if RUNNING_IN_STEVE_JOBS:
-            if not event.spontaneous() and not self.isVisible():
-                return
-
         if self.isVisible():
             QMessageBox.information(self, "Systray",
                 "I'm running in the system tray. "
@@ -252,8 +254,11 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             )
             event.ignore()
             self.hide()
+        else:
+            event.accept()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    app.setQuitOnLastWindowClosed(False)
     mw = MainWindow()
     sys.exit(app.exec_())

@@ -1,11 +1,11 @@
 import json
-import requests
+import logging
 import os
-from bs4 import BeautifulSoup
 
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import * 
-from PyQt5.QtGui import *
+import requests
+from bs4 import BeautifulSoup
+from PyQt5.QtCore import QThread, pyqtSignal, QSettings
+from PyQt5.QtWidgets import QDialog, QMessageBox, QDialogButtonBox
 
 from ui.Ui_LoginDialog import Ui_LoginDialog
 
@@ -15,7 +15,7 @@ def getLoginToken(address, email, password, timeout=15):
     client = requests.session()
 
     soup = BeautifulSoup(client.get(address, timeout=timeout).text, "html.parser")
-    csrf = soup.find('input', { 'name': "csrf_token" })['value']
+    csrf = soup.find('input', {'name': "csrf_token" })['value']
 
     login_data = json.dumps({
         "email": email,
@@ -23,22 +23,32 @@ def getLoginToken(address, email, password, timeout=15):
         "csrf_token": csrf
     })
 
-    r = client.post(address, data=login_data, headers={ "content-type": "application/json" }, timeout=timeout)
+    r = client.post(address, data=login_data, headers={"content-type": "application/json" },
+                    timeout=timeout)  # type: requests.Response
 
-    ## if there's a login failure here, the server will report back whether the username or password was wrong.
-    ## https://github.com/mattupstate/flask-security/issues/673
+    # if there's a login failure here, the server will report back whether the username or password
+    # was wrong. https://github.com/mattupstate/flask-security/issues/673
+
+    if not r.ok:
+        logging.info(f"response: {r.status_code}")
+        logging.debug(r.text)
 
     return r.json()['response']['user']['authentication_token']
 
+
 def uploadHandle(address, token, handle):
-    r = requests.post(address, headers={ "Authentication-Token": token }, files={ "image": handle })
+    r = requests.post(address, headers={"Authentication-Token": token}, files={"image": handle})
+    logging.info(f"response: {r.status_code}")
+    r.raise_for_status()
     return r.json()['url']
+
 
 def uploadFile(address, token, path, delete=True):
     r = uploadHandle(address, token, open(path, "rb"))
     if delete:
         os.unlink(path)
     return r
+
 
 class UploadThread(QThread):
 
@@ -61,6 +71,7 @@ class UploadThread(QThread):
 
         self.resultReady.emit(url, error)
 
+
 class UploadHandleThread(UploadThread):
     def run(self):
         url, error = None, None
@@ -70,7 +81,8 @@ class UploadHandleThread(UploadThread):
         except Exception as e:
             error = e
 
-        self.resultReady.emit(url, error)        
+        self.resultReady.emit(url, error)
+
 
 class LoginThread(QThread):
 
@@ -93,6 +105,7 @@ class LoginThread(QThread):
 
         self.resultReady.emit(token, error)
 
+
 class LoginDialog(QDialog, Ui_LoginDialog):
     def __init__(self, parent):
         super(LoginDialog, self).__init__(parent)
@@ -104,14 +117,15 @@ class LoginDialog(QDialog, Ui_LoginDialog):
     def accept(self):
         self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(False)
 
-        addr = QSettings(QSettings.IniFormat, QSettings.UserScope, "GliTch_ Is Mad Studios", "PostIt").value("internet/address")
+        addr = QSettings(QSettings.IniFormat, QSettings.UserScope,
+                         "GliTch_ Is Mad Studios", "PostIt").value("internet/address")
 
         self.thread = LoginThread(addr + "/login",
             self.emailAddressLineEdit.text(),
             self.passwordLineEdit.text(), self)
         self.thread.resultReady.connect(self.gotToken)
         self.thread.start()
-    
+
     def reject(self):
         if self.thread.isRunning():
             self.thread.terminate()

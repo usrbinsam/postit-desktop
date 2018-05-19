@@ -1,18 +1,26 @@
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+import logging
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QDialog
 
 from ui.Ui_Preferences import Ui_PreferencesDialog
 
+
 def _bool(settings, directive, fallback):
     value = settings.value(directive)
-    if value is None:
-        return fallback
+
+    if isinstance(value, bool):
+        return value
+
+    logging.debug(f"_bool(): {directive!r} is {value!r}")
 
     if value == "true":
         return True
     elif value == "false":
         return False
+
+    return fallback
+
 
 class PreferencesDialog(QDialog, Ui_PreferencesDialog):
     def __init__(self, settings, parent=None):
@@ -27,8 +35,7 @@ class PreferencesDialog(QDialog, Ui_PreferencesDialog):
     def readSettings(self):
         s = self.settings
 
-        self.startOnLoginCheckBox.setChecked(
-            _bool(s, "preferences/startup", False))
+        self.startOnLoginCheckBox.setChecked(_bool(s, "preferences/startup", False))
         self.copyLinkToClipboardCheckBox.setChecked(
            _bool(s, "preferences/copyToClipboard", True))
         self.showUploadCompleteNotificationCheckBox.setChecked(
@@ -41,5 +48,6 @@ class PreferencesDialog(QDialog, Ui_PreferencesDialog):
 
         s.setValue("preferences/startup", self.startOnLoginCheckBox.isChecked())
         s.setValue("preferences/copyToClipboard", self.copyLinkToClipboardCheckBox.isChecked())
-        s.setValue("preferences/showNotification", self.showUploadCompleteNotificationCheckBox.isChecked())
+        s.setValue("preferences/showNotification",
+                   self.showUploadCompleteNotificationCheckBox.isChecked())
         s.setValue("preferences/openInBrowser", self.openLinkInBrowserCheckBox.isChecked())

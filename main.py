@@ -1,21 +1,27 @@
-import os, sys, platform, webbrowser
+import logging
+import os
+import platform
+import sys
+import webbrowser
 
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+import requests
+from PyQt5.QtCore import QPoint, QRect, QSettings, QUrl
+from PyQt5.QtGui import QGuiApplication, QIcon, QPixmap
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QMenu, QMessageBox,
+                             QSystemTrayIcon)
+from PyQt5.QtMultimedia import QSoundEffect
 
-from utils import *
-
-from ui.Ui_Main import Ui_MainWindow
-from selector import RectangularSelectionWindow
 from preferences import PreferencesDialog
+from restclient import LoginDialog, UploadHandleThread, UploadThread
+from selector import RectangularSelectionWindow
+from ui.Ui_Main import Ui_MainWindow
+from utils import *
 
 if RUNNING_IN_STEVE_JOBS:
     import wrappers_mac as wrappers
 elif RUNNING_IN_HELL:
     import wrappers_win32 as wrappers
 
-from restclient import LoginDialog, UploadThread, UploadHandleThread
 
 class MainWindow(QMainWindow, Ui_MainWindow):
 
@@ -29,15 +35,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.loginBn.clicked.connect(self.loginUser)
         self.preferencesBn.clicked.connect(self.openPreferences)
 
-        self.selectorWindows    = [ ]
-        self.highlightWindows   = [ ]
-        self.uploadThreads      = [ ]
-        self.lastUpload         = ''
-        self.currentGeometry    = QRect()
-        self.currentWId         = -1
+        self.selectorWindows = []
+        self.highlightWindows = []
+        self.uploadThreads = []
+        self.lastUpload = ""
+        self.currentGeometry = QRect()
+        self.currentWId = -1
+
+        self.doneSound = QSoundEffect()
+        self.doneSound.setSource(QUrl.fromLocalFile("done.wav"))
+        self.errorSound = QSoundEffect()
+        self.errorSound.setSource(QUrl.fromLocalFile("error.wav"))
+
 
         icon = QIcon(":static/angry.svg")
         icon.setIsMask(True)
+
 
         self.trayIcon = QSystemTrayIcon(self)
         self.trayIcon.setIcon(icon)
@@ -46,7 +59,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.trayIcon.messageClicked.connect(self.openLastUpload)
 
         self.settings = QSettings(QSettings.IniFormat, QSettings.UserScope,
-            "GliTch_ Is Mad Studios", "PostIt")
+                                  "GliTch_ Is Mad Studios", "PostIt")
 
         self.readSettings()
 
@@ -60,11 +73,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         menu.addAction("Window Screenshot", self.enableWindowSelectionMode)
         menu.addAction("Select Area", self.rectangularSelection)
         menu.addSeparator()
+        menu.addAction("Open Gallery ...", self.openGallery)
+        menu.addSeparator()
         menu.addAction("Preferences...", self.openPreferences)
         menu.addAction("Show", self.show)
         menu.addAction("Quit", qApp.exit)
 
         return menu
+
+    def openGallery(self):
+
+        webbrowser.open_new_tab(
+            self.settings.value("internet/address") + "/gallery"
+        )
 
     def openPreferences(self):
         prefDiag = PreferencesDialog(self.settings, self)
@@ -124,7 +145,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             return
 
         if WId == self.currentWId:
-            print("EH?! grabbed the same window even the cursor moved outside of it...")
+            print("EH?! grabbed the same window even though the cursor moved outside of it...")
 
         self.currentWId = WId
         self.currentGeometry = QRect(*getWindowDimensions(WId))
@@ -143,7 +164,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def shootFullScreen(self):
 
-        shots = [ ]
+        shots = []
 
         w = 0
         h = 0
@@ -209,7 +230,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         thread = UploadThread(
             self.settings.value("internet/address") + "/api/upload",
             self.settings.value("internet/authToken"),
-            path, self)
+                                path, self)
 
         thread.resultReady.connect(self.uploadComplete)
         thread.start()
@@ -220,7 +241,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         thread = UploadHandleThread(
             self.settings.value("internet/address") + "/api/upload",
             self.settings.value("internet/authToken"),
-            handle, self)
+                                handle, self)
 
         thread.resultReady.connect(self.uploadComplete)
         thread.start()
@@ -230,14 +251,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if uri and not error:
 
+            self.doneSound.play()
+
             URL = self.settings.value("internet/address") + uri
 
             clipboard = QGuiApplication.clipboard()
             clipboard.setText(URL)
             self.lastUpload = URL
-            self.trayIcon.showMessage("Upload Complete", "Image upload complete. The URL is in your clipboard.")
+            self.trayIcon.showMessage("Upload Complete",
+                                      "Image upload complete. The URL is in your clipboard.")
 
+            if self.settings.value("preferences/openInBrowser"):
+                logging.debug("opening in browser")
+                webbrowser.open_new_tab(URL)
         else:
+
+            self.errorSound.play()
+            try:
+                raise error
+            except requests.exceptions.HTTPError as http_error:
+                if http_error.response.status_code == 401:
+                    logging.info("received 401 during upload request. need to login again")
+                    self.trayIcon.showMessage("Invalid Login",
+                                              "Uh oh, invaild login token. Please login again.")
+                    self.loginUser()
+                    self.trayIcon.showMessage("Retry", "Try your upload again.")
+                    return
+
             QMessageBox.critical(self, "Upload Error", str(error))
             raise error
 
@@ -257,7 +297,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             event.accept()
 
+
+def set_verbose():
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+
+    channel = logging.StreamHandler(sys.stdout)
+    channel.setLevel(logging.DEBUG)
+    channel.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+    root.addHandler(channel)
+
+    logging.debug("verbosity enabled")
+
+
 if __name__ == '__main__':
+
+    if os.environ.get("POSTIT_DEBUG", None):
+        set_verbose()
+
     app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
     mw = MainWindow()
